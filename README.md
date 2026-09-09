@@ -42,6 +42,12 @@ Android application module. Requirements: **JDK 17**, Android SDK **platform 34*
 > gitignored). Without it the app installs but has nothing to mount. See the parent repo's
 > `docs/INJECTION.md` / `docs/DEPLOY.md`.
 
+## Building it yourself
+
+The injector is **not shipped as a prebuilt APK** — you build your own against your device's
+host app. See **[BUILD.md](BUILD.md)** for the full procedure, prerequisites, signing, and the
+liability notice.
+
 ## Note
 
 Extracted from a multi-module monorepo; needs a root build/wrapper with the plugin versions above.
