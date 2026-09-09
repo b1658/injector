@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- loopback only: connect to the box's own root adbd at 127.0.0.1:5555 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- The injector OWNS the vendor-signal broadcast permission (it is always installed first in
+         this deployment). Consumer apps only <uses-permission> it. normal protection => granted at
+         install without a signature match, so third-party consumers can receive too. -->
+    <permission
+        android:name="co.screenmate.can.permission.SIGNALS"
+        android:label="Receive Screenmate CAN vendor signals"
+        android:protectionLevel="normal" />
+    <uses-permission android:name="co.screenmate.can.permission.SIGNALS" />
+
+    <application android:label="SM CAN Injector" android:allowBackup="false">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Periodic self-heal: re-applies injection if the host stopped (see LivenessJobService). -->
+        <service
+            android:name=".LivenessJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <!-- Fast, consumer-driven recovery. A consumer that sees the feed go silent broadcasts
+             REINJECT here; the framework wakes this process (even from cached) to relaunch the host,
+             cutting recovery from LivenessJobService's ~15-min floor to ~1s. android:permission means
+             only a sender holding SIGNALS can trigger it; ReinjectReceiver debounces to prevent
+             force-stop thrashing. See ReinjectReceiver. -->
+        <receiver
+            android:name=".ReinjectReceiver"
+            android:exported="true"
+            android:permission="co.screenmate.can.permission.SIGNALS">
+            <intent-filter>
+                <action android:name="co.screenmate.can.injector.REINJECT" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
